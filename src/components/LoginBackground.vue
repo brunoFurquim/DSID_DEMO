@@ -6,7 +6,7 @@
 export default {};
 </script>
 
-<style>
+<style scoped>
 .imgBg {
   min-height: 100%;
   min-width: 70%;

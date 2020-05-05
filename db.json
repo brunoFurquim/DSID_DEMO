@@ -1,0 +1,29 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "login": "brunofurquim@email.com",
+      "password": "Furquimdecampos"
+    },
+    {
+      "id": 2,
+      "login": "andresolla@email.com",
+      "password": "senha456@"
+    },
+    {
+      "id": 3,
+      "login": "marcusvinicius@email.com",
+      "password": "senha789#"
+    },
+    {
+      "id": 4,
+      "login": "gabrielbrandao@email.com",
+      "password": "senha101112$"
+    },
+    {
+      "id": 14.489813630386772,
+      "login": "brunofurquimc@gmail.com",
+      "password": "Furquimdecampos"
+    }
+  ]
+}

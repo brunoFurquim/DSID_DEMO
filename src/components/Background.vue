@@ -17,6 +17,6 @@ export default {};
 
   background-size: cover;
   background-position: center;
-  background-image: url("../assets/fundoLogin.jpg");
+  background-image: url("../assets/background.jpg");
 }
 </style>

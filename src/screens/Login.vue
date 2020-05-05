@@ -2,7 +2,7 @@
   <div>
     <Sidebar v-bind:titulo="titulo" subtitulo="Faça login para continuar." />
 
-    <LoginBackground />
+    <Background />
 
     <div id="main">
       <b-row class="no-gutters" style="margin-top: 30vh !important">
@@ -17,7 +17,10 @@
               </b-col>
 
               <b-col md="8">
-                <div class="ml-5 verticalLine pt-3 leftMar">
+                <div
+                  class="ml-5 verticalLine pt-3 leftMar"
+                  style="border-left: 1px solid rgba(0, 0, 0, 0.5)"
+                >
                   <div class="ml-5">
                     <b-form-group>
                       <float-label>
@@ -43,16 +46,15 @@
                     </b-form-group>
 
                     <div class="row">
-                      <div class="col-6">
-                        <router-link to="/Recuperar" class="text-light">
-                          <button class="btn btn-md btn-outline-success">
-                            Recuperar
-                            <!-- <i class="nav-link-icon fa fa-lock ml-2"></i> -->
-                          </button>
-                        </router-link>
+                      <div class="col-6 float-left">
+                        <b-button
+                          @click="buscar"
+                          variant="info"
+                          size="md"
+                          class="float-left"
+                        >Buscar (GET)</b-button>
                       </div>
-
-                      <div class="col-6">
+                      <div class="col-6 float-right">
                         <b-button
                           v-on:click="login"
                           variant="success"
@@ -60,7 +62,32 @@
                           class="float-right"
                         >
                           <div>
-                            Entrar
+                            Entrar (POST)
+                            <b-spinner v-if="loading" small label="Loading..." class="ml-2"></b-spinner>
+
+                            <i v-else class="fa fa-sign-in"></i>
+                          </div>
+                        </b-button>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-6 float-left">
+                        <b-button
+                          @click="apagar"
+                          variant="danger"
+                          size="md"
+                          class="float-left"
+                        >Apagar (DELETE)</b-button>
+                      </div>
+                      <div class="col-6 float-right">
+                        <b-button
+                          v-on:click="atualizar"
+                          variant="primary"
+                          size="md"
+                          class="float-right"
+                        >
+                          <div>
+                            Atualizar (PUT)
                             <b-spinner v-if="loading" small label="Loading..." class="ml-2"></b-spinner>
 
                             <i v-else class="fa fa-sign-in"></i>
@@ -80,16 +107,13 @@
 </template>
 
 <script>
-// import { login } from "@/Merchant/Inputs.js";
-// import { inputFormat } from "@/_utils/utils";
-
 import Sidebar from "@/components/Sidebar.vue";
-import LoginBackground from "@/components/LoginBackground.vue";
+import Background from "@/components/Background.vue";
 
 export default {
   components: {
     Sidebar,
-    LoginBackground
+    Background
   },
   props: {},
   data() {
@@ -104,6 +128,90 @@ export default {
     };
   },
   methods: {
+    async atualizar() {
+      this.loading = true;
+      var objs = await this.buscar();
+      console.log("Objs: ", objs);
+
+      var id = this.findId(objs, this.formData.login);
+      console.log(id);
+
+      var loginValido = this.validaCampo(this.formData.login);
+      var passwordValido = this.validaCampo(this.formData.password);
+
+      if (loginValido && passwordValido) {
+        var response = await this.axios
+          .put("http://localhost:3000/users/" + id, {
+            id: id,
+            login: this.formData.login,
+            password: this.formData.password
+          })
+          .then(response => {
+            return response;
+          });
+          console.log(response);
+      } else {
+        //Avisar usuario que um dos campos esta invalido
+        this.$toast.warning(
+          "Verifique se ambos os campos estão preenchidos corretamente!",
+          "Atenção",
+          {
+            position: "topRight"
+          }
+        );
+        this.loading = false;
+      }
+    },
+    async buscar() {
+      this.loading = true;
+
+      var response = await this.axios
+        .get("http://localhost:3000/users")
+        .then(response => {
+          console.log(response.data);
+          this.loading = false;
+          return response;
+        });
+      return response.data;
+    },
+    findId(objs, login) {
+      var obj = objs.find(element => element.login == login);
+      console.log(obj.id);
+      return obj.id;
+    },
+    async apagar() {
+      this.loading = true;
+
+      var loginValido = this.validaCampo(this.formData.login);
+      var passwordValido = this.validaCampo(this.formData.password);
+
+      if (loginValido && passwordValido) {
+        //Fazer requisicao HTTP do tipo POST, usando axios
+        var objs = await this.buscar();
+
+        var id = this.findId(objs, this.formData.login);
+        console.log(id);
+        await this.axios
+          .delete("http://localhost:3000/users/" + id)
+          .then(response => {
+            console.log(response.data);
+            this.loading = false;
+            this.$toast.error("Registro apagado com sucesso!", "Atenção", {
+              position: "topRight"
+            });
+          });
+      } else {
+        //Avisar usuario que um dos campos esta invalido
+        this.$toast.warning(
+          "Verifique se ambos os campos estão preenchidos corretamente!",
+          "Atenção",
+          {
+            position: "topRight"
+          }
+        );
+        this.loading = false;
+      }
+    },
     async login() {
       this.loading = true;
 
@@ -112,12 +220,19 @@ export default {
 
       if (loginValido && passwordValido) {
         //Fazer requisicao HTTP do tipo POST, usando axios
-        setTimeout(() => {
-          this.$toast.success("Login feito com sucesso!", "Atenção", {
-            position: "topRight"
+        await this.axios
+          .post("http://localhost:3000/users", {
+            id: Math.random() * 100,
+            login: this.formData.login,
+            password: this.formData.password
+          })
+          .then(response => {
+            console.log(response.data);
+            this.loading = false;
+            this.$toast.success("Login feito com sucesso!", "Atenção", {
+              position: "topRight"
+            });
           });
-          this.loading = false;
-        }, 3000);
       } else {
         //Avisar usuario que um dos campos esta invalido
         this.$toast.warning(
@@ -136,7 +251,7 @@ export default {
   },
   watch: {
     Senha(valorNovo) {
-      if (valorNovo.length > 10)
+      if (valorNovo.length > 15)
         this.$toast.warning(
           "Tamanho máximo excedido para o campo Senha!",
           "Atenção",

@@ -47,20 +47,17 @@
 
                     <div class="row">
                       <div class="col-6 float-left">
-                        <b-button
-                          @click="buscar"
-                          variant="info"
-                          size="md"
-                          class="float-left"
-                        >Buscar (GET)</b-button>
+                        <b-button @click="buscar" variant="info" size="md" class="float-left">
+                          <div>
+                            Buscar (GET)
+                            <b-spinner v-if="loadingBuscar" small label="Loading..." class="ml-2"></b-spinner>
+
+                            <i v-else class="fa fa-sign-in"></i>
+                          </div>
+                        </b-button>
                       </div>
                       <div class="col-6 float-right">
-                        <b-button
-                          v-on:click="login"
-                          variant="success"
-                          size="md"
-                          class="float-right"
-                        >
+                        <b-button @click="login" variant="success" size="md" class="float-right">
                           <div>
                             Entrar (POST)
                             <b-spinner v-if="loading" small label="Loading..." class="ml-2"></b-spinner>
@@ -70,7 +67,7 @@
                         </b-button>
                       </div>
                     </div>
-                    <div class="row mt-2">
+                    <!--<div class="row mt-2">
                       <div class="col-6 float-left">
                         <b-button
                           @click="apagar"
@@ -94,7 +91,7 @@
                           </div>
                         </b-button>
                       </div>
-                    </div>
+                    </div>-->
                   </div>
                 </div>
               </b-col>
@@ -115,10 +112,18 @@ export default {
     Sidebar,
     Background
   },
+  created() {
+    var response = this.axios
+      .get("https://dsid-server.herokuapp.com/info")
+      .then(response => {
+        console.log(response);
+      });
+  },
   props: {},
   data() {
     return {
       loading: false,
+      loadingBuscar: false,
       titulo: "Bem-vindo a DemoVue!",
       formData: {
         login: "",
@@ -149,7 +154,7 @@ export default {
           .then(response => {
             return response;
           });
-          console.log(response);
+        console.log(response);
       } else {
         //Avisar usuario que um dos campos esta invalido
         this.$toast.warning(
@@ -163,13 +168,15 @@ export default {
       }
     },
     async buscar() {
-      this.loading = true;
+      this.loadingBuscar = true;
 
       var response = await this.axios
-        .get("http://localhost:3000/users")
+        .get("https://dsid-server.herokuapp.com/users")
         .then(response => {
-          console.log(response.data);
-          this.loading = false;
+          response.data.users.forEach(element => {
+            console.log(element.login);
+          });
+          this.loadingBuscar = false;
           return response;
         });
       return response.data;
@@ -221,17 +228,22 @@ export default {
       if (loginValido && passwordValido) {
         //Fazer requisicao HTTP do tipo POST, usando axios
         await this.axios
-          .post("http://localhost:3000/users", {
-            id: Math.random() * 100,
+          .post("https://dsid-server.herokuapp.com/login", {
             login: this.formData.login,
             password: this.formData.password
           })
           .then(response => {
             console.log(response.data);
             this.loading = false;
-            this.$toast.success("Login feito com sucesso!", "Atenção", {
-              position: "topRight"
-            });
+            if (response.data.auth) {
+              this.$toast.success("Login feito com sucesso!", "Atenção", {
+                position: "topRight"
+              });
+            } else {
+              this.$toast.error(response.data.mensagem, "Atenção", {
+                position: "topRight"
+              });
+            }
           });
       } else {
         //Avisar usuario que um dos campos esta invalido
